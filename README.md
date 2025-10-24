@@ -4,6 +4,7 @@
 - 添加点单（输入点单号与菜品）
 - 完成点单（针对“等待中”的点单）
 - 多用户并发与实时更新（通过 Server-Sent Events）
+- 持久化存储（SQLite，重启不丢数据）
 
 ## 运行方式
 
@@ -27,7 +28,7 @@ npm start
 - PATCH `/api/orders/:id/complete` 完成点单
 - GET `/api/events` 通过 SSE 订阅实时事件（`orders:snapshot`, `orders:created`, `orders:updated`）
 
-说明：当前为内存存储，重启会清空；并发下操作是原子同步的，适用于数十并发演示。后续可换为数据库（如 PostgreSQL / Redis）与消息广播（如 WebSocket / SSE Fanout）。
+说明：当前使用 SQLite 持久化，数据文件位于 `data/cafe.db`；并发下操作是原子同步的，适用于数十并发演示。后续可换为数据库（如 PostgreSQL / Redis）与消息广播（如 WebSocket / SSE Fanout）。
 
 ## 文件结构
 

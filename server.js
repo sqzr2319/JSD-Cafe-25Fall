@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const Database = require('better-sqlite3');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,9 +12,27 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// In-memory order store
-// order: { id: string, items: string, status: 'waiting'|'completed', createdAt: number, updatedAt: number }
-const orders = new Map();
+// -----------------------------
+// SQLite setup (persistent store)
+// -----------------------------
+const dataDir = path.join(__dirname, 'data');
+fs.mkdirSync(dataDir, { recursive: true });
+const dbPath = path.join(dataDir, 'cafe.db');
+const db = new Database(dbPath);
+try { db.pragma('journal_mode = WAL'); } catch (_) {}
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS orders (
+  id TEXT PRIMARY KEY,
+  items TEXT NOT NULL,
+  status TEXT NOT NULL CHECK(status IN ('waiting','completed')),
+  createdAt INTEGER NOT NULL,
+  updatedAt INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_orders_status_created ON orders(status, createdAt);
+`);
+
+// order shape: { id, items, status, createdAt, updatedAt }
 
 // SSE clients
 const sseClients = new Set();
@@ -29,17 +49,20 @@ function broadcast(event, data) {
 }
 
 function snapshot() {
-  return Array.from(orders.values()).sort((a, b) => a.createdAt - b.createdAt);
+  const rows = db.prepare(`SELECT id, items, status, createdAt, updatedAt FROM orders ORDER BY createdAt ASC`).all();
+  return rows;
 }
 
 // API routes
 app.get('/api/orders', (req, res) => {
   const { status } = req.query;
-  let list = snapshot();
+  let rows;
   if (status === 'waiting' || status === 'completed') {
-    list = list.filter(o => o.status === status);
+    rows = db.prepare(`SELECT id, items, status, createdAt, updatedAt FROM orders WHERE status = ? ORDER BY createdAt ASC`).all(status);
+  } else {
+    rows = snapshot();
   }
-  res.json(list);
+  res.json(rows);
 });
 
 app.post('/api/orders', (req, res) => {
@@ -53,33 +76,39 @@ app.post('/api/orders', (req, res) => {
   }
 
   const key = id.trim();
-  if (orders.has(key)) {
-    return res.status(409).json({ error: 'Order with this id already exists' });
-  }
-
   const now = Date.now();
   const order = { id: key, items: items.trim(), status: 'waiting', createdAt: now, updatedAt: now };
-  // Atomic insert (synchronous in Node)
-  orders.set(key, order);
-
+  try {
+    db.prepare(`INSERT INTO orders(id, items, status, createdAt, updatedAt) VALUES(?,?,?,?,?)`) 
+      .run(order.id, order.items, order.status, order.createdAt, order.updatedAt);
+  } catch (err) {
+    if (String(err?.message || '').includes('UNIQUE') || String(err?.code || '').includes('SQLITE_CONSTRAINT')) {
+      return res.status(409).json({ error: 'Order with this id already exists' });
+    }
+    return res.status(500).json({ error: 'Failed to create order' });
+  }
   broadcast('orders:created', order);
   res.status(201).json(order);
 });
 
 app.patch('/api/orders/:id/complete', (req, res) => {
   const key = req.params.id.trim();
-  const order = orders.get(key);
+  const order = db.prepare(`SELECT id, items, status, createdAt, updatedAt FROM orders WHERE id = ?`).get(key);
   if (!order) {
     return res.status(404).json({ error: 'Order not found' });
   }
   if (order.status === 'completed') {
     return res.json(order); // idempotent
   }
-  order.status = 'completed';
-  order.updatedAt = Date.now();
-  orders.set(key, order);
-  broadcast('orders:updated', order);
-  res.json(order);
+  const updatedAt = Date.now();
+  try {
+    db.prepare(`UPDATE orders SET status = 'completed', updatedAt = ? WHERE id = ?`).run(updatedAt, key);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update order' });
+  }
+  const updated = { ...order, status: 'completed', updatedAt };
+  broadcast('orders:updated', updated);
+  res.json(updated);
 });
 
 // SSE endpoint for real-time updates
