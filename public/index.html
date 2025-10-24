@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>咖啡厅在线点单</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>咖啡厅在线点单</h1>
+    <div class="rolebar">
+      <span>当前角色：<strong id="role-label">未设置</strong></span>
+      <button id="role-switch" class="ghost">切换角色</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card" id="add-card">
+      <h2>添加点单</h2>
+      <form id="order-form">
+        <div class="row">
+          <label for="order-id">点单号</label>
+          <input id="order-id" name="id" placeholder="例如: 114" required />
+        </div>
+        <div class="row">
+          <label for="order-items">点单菜品</label>
+          <input id="order-items" name="items" placeholder="例如: 蛋挞2，无限特调1" required />
+        </div>
+        <div class="row actions">
+          <button type="submit">添加点单</button>
+          <span id="form-status" class="status"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>等待中的点单</h2>
+      <div id="waiting-list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>已完成的点单</h2>
+      <div id="completed-list" class="list"></div>
+    </section>
+  </main>
+
+  <!-- 角色选择弹窗 -->
+  <div id="role-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="role-modal-title">
+    <div class="dialog">
+      <h3 id="role-modal-title">请选择你的身份</h3>
+      <p class="muted">选择后将限制对应权限，并用于播放相应提示音。</p>
+      <div class="role-actions">
+        <button id="choose-waiter">服务生（只能添加点单）</button>
+        <button id="choose-barista" class="complete">咖啡师（只能完成点单）</button>
+      </div>
+      <p class="muted small">提示：浏览器可能需要一次点击交互后才能播放语音，选择身份即视为授权。</p>
+    </div>
+  </div>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "jsd-cafe-25fall",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cafe online ordering web app with Express and SSE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
