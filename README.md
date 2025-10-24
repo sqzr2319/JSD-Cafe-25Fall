@@ -10,15 +10,30 @@
 
 需要 Node.js 18+
 
-```powershell
+```bash
 # 安装依赖
 npm install
 
 # 启动服务（默认 http://localhost:3000）
 npm start
+
+# 如 3000 端口被占用，可临时改端口
+PORT=4000 npm start
 ```
 
 启动后，打开浏览器访问：http://localhost:3000
+
+如修改端口，则访问对应端口，例如：http://localhost:4000
+
+### 常见问题
+
+- 错误：`Error: Cannot find module 'express'`
+  - 解决：先执行 `npm install` 安装依赖。
+- 错误：`EADDRINUSE: address already in use :::3000`（端口被占用）
+  - 解决方案之一：换端口运行 `PORT=4000 npm start`
+  - 方案之二：释放 3000 端口（Linux）
+    - 查看占用 3000 的进程：`lsof -i :3000`
+    - 结束进程：`kill -9 <PID>`（请谨慎操作）
 
 ## 接口约定（可替换为占位符服务器地址）
 

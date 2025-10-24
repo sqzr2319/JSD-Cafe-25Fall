@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "start:4000": "PORT=4000 node server.js"
   },
   "engines": {
     "node": ">=18"
