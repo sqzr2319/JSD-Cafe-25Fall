@@ -111,6 +111,22 @@ app.patch('/api/orders/:id/complete', (req, res) => {
   res.json(updated);
 });
 
+// Delete an order
+app.delete('/api/orders/:id', (req, res) => {
+  const key = req.params.id.trim();
+  const existing = db.prepare(`SELECT id, items, status, createdAt, updatedAt FROM orders WHERE id = ?`).get(key);
+  if (!existing) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
+  try {
+    db.prepare(`DELETE FROM orders WHERE id = ?`).run(key);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to delete order' });
+  }
+  broadcast('orders:deleted', { id: key });
+  res.json({ ok: true, id: key });
+});
+
 // SSE endpoint for real-time updates
 app.get('/api/events', (req, res) => {
   res.set({

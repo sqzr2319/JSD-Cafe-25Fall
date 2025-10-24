@@ -19,13 +19,13 @@ const els = {
 let role = null;
 
 function getRole() {
-  const r = localStorage.getItem('role');
+  const r = sessionStorage.getItem('role');
   return r === 'waiter' || r === 'barista' ? r : null;
 }
 
 function setRole(r) {
   role = r;
-  localStorage.setItem('role', r);
+  sessionStorage.setItem('role', r);
   applyRoleUI();
 }
 
@@ -169,6 +169,15 @@ function sseConnect() {
     if (order.status === 'completed' && role === 'waiter') {
       speak(`${order.id}号点单已完成`);
     }
+  });
+  es.addEventListener('orders:deleted', (ev) => {
+    try {
+      const { id } = JSON.parse(ev.data || '{}');
+      if (!id) return;
+      current = current.filter(o => o.id !== id);
+      window.__currentOrders = current;
+      renderLists(current);
+    } catch (_) {}
   });
   es.onerror = () => {
     // 简单重连
