@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>活动抽奖</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>活动抽奖</h1>
+    <div class="rolebar">
+      <a href="/" class="ghost nav-link">返回点单主页</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card full-span">
+      <h2>抽奖规则</h2>
+      <p class="muted">仅统计已完成点单，且点单内容不是只含蛋挞。</p>
+      <div class="row actions">
+        <button id="draw-btn">开始抽奖</button>
+        <button id="refresh-btn" class="to-delivery">刷新候选</button>
+      </div>
+      <div id="lottery-summary" class="status"></div>
+      <div id="lottery-result" class="lottery-result"></div>
+    </section>
+
+    <section class="card full-span">
+      <h2>可抽奖点单列表</h2>
+      <div id="eligible-list" class="list"></div>
+    </section>
+  </main>
+
+  <script src="/lottery.js" type="module"></script>
+</body>
+</html>

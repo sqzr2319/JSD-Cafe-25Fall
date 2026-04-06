@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>点单后台管理</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>点单后台管理</h1>
+    <div class="rolebar">
+      <a href="/" class="ghost nav-link">返回点单主页</a>
+      <a href="/lottery" class="ghost nav-link">前往抽奖页</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card" id="add-card">
+      <h2>添加点单</h2>
+      <form id="admin-add-form">
+        <div class="row">
+          <label for="admin-order-id">点单号</label>
+          <input id="admin-order-id" name="id" placeholder="例如: 114" required />
+        </div>
+        <div class="row">
+          <label for="admin-order-items">点单菜品</label>
+          <input id="admin-order-items" name="items" placeholder="例如: 蛋挞2随机特调1" required />
+        </div>
+        <div class="row actions">
+          <button type="submit">添加</button>
+          <span id="admin-form-status" class="status"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card full-span">
+      <h2>运营统计</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="muted">点单总数</div>
+          <div id="stat-order-count" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="muted">总金额</div>
+          <div id="stat-total-amount" class="stat-value">0 元</div>
+        </div>
+      </div>
+      <h3>单品销量</h3>
+      <div id="product-stats" class="product-stats"></div>
+      <h3>点单趋势（累计）</h3>
+      <canvas id="order-trend-chart" width="1024" height="280"></canvas>
+    </section>
+
+    <section class="card full-span">
+      <h2>点单数据库视图</h2>
+      <div id="admin-list" class="list"></div>
+    </section>
+  </main>
+
+  <script src="/admin.js" type="module"></script>
+</body>
+</html>

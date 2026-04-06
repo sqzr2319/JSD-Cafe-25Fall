@@ -11,6 +11,7 @@
     <h1>咖啡厅在线点单</h1>
     <div class="rolebar">
       <span>当前角色：<strong id="role-label">未设置</strong></span>
+      <a href="/lottery" class="ghost nav-link">活动抽奖</a>
       <button id="role-switch" class="ghost">切换角色</button>
     </div>
   </header>
@@ -25,7 +26,7 @@
         </div>
         <div class="row">
           <label for="order-items">点单菜品</label>
-          <input id="order-items" name="items" placeholder="例如: 蛋挞2，无限特调1" required />
+          <input id="order-items" name="items" placeholder="例如: 蛋挞2随机特调1" required />
         </div>
         <div class="row actions">
           <button type="submit">添加点单</button>
@@ -35,8 +36,13 @@
     </section>
 
     <section class="card">
-      <h2>等待中的点单</h2>
-      <div id="waiting-list" class="list"></div>
+      <h2>制作中</h2>
+      <div id="preparing-list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>待配送</h2>
+      <div id="delivery-list" class="list"></div>
     </section>
 
     <section class="card">
@@ -49,12 +55,11 @@
   <div id="role-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="role-modal-title">
     <div class="dialog">
       <h3 id="role-modal-title">请选择你的身份</h3>
-      <p class="muted">选择后将限制对应权限，并用于播放相应提示音。</p>
+      <p class="muted">选择后将限制对应权限。</p>
       <div class="role-actions">
-        <button id="choose-waiter">服务生（只能添加点单）</button>
-        <button id="choose-barista" class="complete">咖啡师（只能完成点单）</button>
+        <button id="choose-waiter">服务生（添加点单、完成配送）</button>
+        <button id="choose-barista" class="complete">咖啡师（制作中转待配送）</button>
       </div>
-      <p class="muted small">提示：浏览器可能需要一次点击交互后才能播放语音，选择身份即视为授权。</p>
     </div>
   </div>
 

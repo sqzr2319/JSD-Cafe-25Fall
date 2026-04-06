@@ -5,7 +5,8 @@ const els = {
   id: document.getElementById('order-id'),
   items: document.getElementById('order-items'),
   formStatus: document.getElementById('form-status'),
-  waitingList: document.getElementById('waiting-list'),
+  preparingList: document.getElementById('preparing-list'),
+  deliveryList: document.getElementById('delivery-list'),
   completedList: document.getElementById('completed-list'),
   addCard: document.getElementById('add-card'),
   roleLabel: document.getElementById('role-label'),
@@ -51,28 +52,40 @@ function fmtTime(ts) {
   return d.toLocaleString();
 }
 
+function statusLabel(status) {
+  if (status === 'preparing') return '制作中';
+  if (status === 'delivery_pending') return '待配送';
+  return '已完成';
+}
+
 function orderCard(order) {
   const div = document.createElement('div');
   div.className = 'order';
   div.dataset.id = order.id;
+  const timeText = order.status === 'delivery_pending'
+    ? `更新: ${fmtTime(order.updatedAt)}`
+    : `创建: ${fmtTime(order.createdAt)}${order.updatedAt !== order.createdAt ? ` · 更新: ${fmtTime(order.updatedAt)}` : ''}`;
   div.innerHTML = `
-    <div class="meta">
-      <strong>#${order.id}</strong>
-      <span class="muted">${order.status === 'waiting' ? '等待中' : '已完成'}</span>
+    <div class="order-main">
+      <div class="meta">
+        <strong>#${order.id}</strong>
+        <span class="muted">${statusLabel(order.status)}</span>
+      </div>
+      <div class="items">${order.items}</div>
+      <div class="times muted">${timeText}</div>
     </div>
-    <div class="items">${order.items}</div>
-    <div class="times muted">创建: ${fmtTime(order.createdAt)}${order.updatedAt !== order.createdAt ? ` · 更新: ${fmtTime(order.updatedAt)}` : ''}</div>
   `;
 
-  // 只有咖啡师能看到完成按钮
-  if (order.status === 'waiting' && role === 'barista') {
+  // 咖啡师：制作中 -> 待配送
+  if (order.status === 'preparing' && role === 'barista') {
     const btn = document.createElement('button');
-    btn.textContent = '完成点单';
-    btn.className = 'complete';
+    btn.textContent = '转为待配送';
+    btn.className = 'to-delivery';
     btn.onclick = async () => {
       btn.disabled = true;
       try {
-        await fetch(`${API_BASE}/api/orders/${encodeURIComponent(order.id)}/complete`, { method: 'PATCH' });
+        const res = await fetch(`${API_BASE}/api/orders/${encodeURIComponent(order.id)}/delivery-pending`, { method: 'PATCH' });
+        if (!res.ok) console.error(await res.json());
       } catch (err) {
         console.error(err);
       } finally {
@@ -82,19 +95,48 @@ function orderCard(order) {
     const actions = document.createElement('div');
     actions.className = 'actions';
     actions.appendChild(btn);
+    div.classList.add('with-action');
+    div.appendChild(actions);
+  }
+
+  // 服务生：待配送 -> 已完成
+  if (order.status === 'delivery_pending' && role === 'waiter') {
+    const btn = document.createElement('button');
+    btn.textContent = '标记已完成';
+    btn.className = 'complete';
+    btn.onclick = async () => {
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/api/orders/${encodeURIComponent(order.id)}/complete`, { method: 'PATCH' });
+        if (!res.ok) console.error(await res.json());
+      } catch (err) {
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+      }
+    };
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.appendChild(btn);
+    div.classList.add('with-action');
     div.appendChild(actions);
   }
   return div;
 }
 
 function renderLists(all) {
-  const waiting = all.filter(o => o.status === 'waiting');
-  const completed = all.filter(o => o.status === 'completed');
+  const byCreatedDesc = (a, b) => b.createdAt - a.createdAt;
+  const byUpdatedDesc = (a, b) => b.updatedAt - a.updatedAt;
+  const preparing = all.filter(o => o.status === 'preparing').sort(byCreatedDesc);
+  const delivery = all.filter(o => o.status === 'delivery_pending').sort(byUpdatedDesc);
+  const completed = all.filter(o => o.status === 'completed').sort(byUpdatedDesc);
 
-  els.waitingList.innerHTML = '';
+  els.preparingList.innerHTML = '';
+  els.deliveryList.innerHTML = '';
   els.completedList.innerHTML = '';
 
-  waiting.forEach(o => els.waitingList.appendChild(orderCard(o)));
+  preparing.forEach(o => els.preparingList.appendChild(orderCard(o)));
+  delivery.forEach(o => els.deliveryList.appendChild(orderCard(o)));
   completed.forEach(o => els.completedList.appendChild(orderCard(o)));
 }
 
@@ -128,19 +170,6 @@ async function addOrder(e) {
   }
 }
 
-// 语音播报（中文）
-function speak(text) {
-  try {
-    const s = new SpeechSynthesisUtterance(text);
-    s.lang = 'zh-CN';
-    // 尝试选择中文语音
-    const voices = window.speechSynthesis?.getVoices?.() || [];
-    const zh = voices.find(v => /zh|chinese|中文/i.test(v.lang + ' ' + v.name));
-    if (zh) s.voice = zh;
-    window.speechSynthesis.speak(s);
-  } catch (_) {}
-}
-
 function sseConnect() {
   const es = new EventSource(`${API_BASE}/api/events`);
   let current = [];
@@ -156,9 +185,6 @@ function sseConnect() {
     current = [...current, order].sort((a, b) => a.createdAt - b.createdAt);
     window.__currentOrders = current;
     renderLists(current);
-    if (role === 'barista') {
-      speak(`有新点单${order.id}号`);
-    }
   });
   es.addEventListener('orders:updated', (ev) => {
     const order = JSON.parse(ev.data);
@@ -166,9 +192,6 @@ function sseConnect() {
     if (idx >= 0) current[idx] = order; else current.push(order);
     window.__currentOrders = current;
     renderLists(current);
-    if (order.status === 'completed' && role === 'waiter') {
-      speak(`${order.id}号点单已完成`);
-    }
   });
   es.addEventListener('orders:deleted', (ev) => {
     try {
