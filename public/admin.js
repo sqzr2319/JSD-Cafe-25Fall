@@ -82,7 +82,7 @@ function renderTrendChart(orders) {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, cssWidth, cssHeight);
 
-  const pad = { left: 52, right: 18, top: 18, bottom: 42 };
+  const pad = { left: 52, right: 18, top: 26, bottom: 46 };
   const width = cssWidth - pad.left - pad.right;
   const height = cssHeight - pad.top - pad.bottom;
 
@@ -134,8 +134,8 @@ function renderTrendChart(orders) {
 
   ctx.fillStyle = '#58627a';
   ctx.font = '12px Segoe UI';
-  ctx.fillText('累计点单数', 8, pad.top + 8);
-  ctx.fillText('时间', pad.left + width - 20, cssHeight - 10);
+  ctx.fillText('累计点单数', 8, 14);
+  ctx.fillText('时间', pad.left + width / 2 - 12, cssHeight - 10);
   ctx.fillText('1', pad.left - 18, yOf(1) + 4);
   ctx.fillText(String(yMax), pad.left - 28, yOf(yMax) + 4);
 
@@ -188,6 +188,7 @@ function renderList(orders) {
   for (const order of orders) {
     const div = document.createElement('div');
     div.className = 'order';
+    div.classList.add(`status-${order.status}`);
     div.dataset.id = order.id;
     div.innerHTML = `
       <div class="meta">
@@ -214,6 +215,7 @@ function renderList(orders) {
     const saveBtn = div.querySelector('.save-btn');
     const deleteBtn = div.querySelector('.delete-btn');
     const rowStatus = div.querySelector('.row-status');
+    const statusText = div.querySelector('.meta .muted');
 
     saveBtn.addEventListener('click', async () => {
       rowStatus.textContent = '保存中...';
@@ -226,6 +228,10 @@ function renderList(orders) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || '更新失败');
+        const newStatus = select.value;
+        div.classList.remove('status-preparing', 'status-delivery_pending', 'status-completed');
+        div.classList.add(`status-${newStatus}`);
+        if (statusText) statusText.textContent = statusLabel(newStatus);
         rowStatus.textContent = '状态已更新';
       } catch (err) {
         rowStatus.textContent = err.message;

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>咖啡厅看板</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    main {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 16px 24px;
+      align-items: start;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>咖啡厅在线点单</h1>
+    <div class="rolebar">
+      <a href="/" class="ghost nav-link">返回主页</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>制作中</h2>
+      <div id="preparing-list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>配送中</h2>
+      <div id="delivery-list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>已完成</h2>
+      <div id="completed-list" class="list"></div>
+    </section>
+  </main>
+
+  <script src="/canvas.js" type="module"></script>
+</body>
+</html>

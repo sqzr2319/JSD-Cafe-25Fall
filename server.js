@@ -14,6 +14,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/lottery', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'lottery.html')));
+app.get('/canvas', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'canvas.html')));
 
 // -----------------------------
 // SQLite setup (persistent store)

@@ -12,16 +12,23 @@ const els = {
   roleLabel: document.getElementById('role-label'),
   roleSwitch: document.getElementById('role-switch'),
   roleModal: document.getElementById('role-modal'),
-  chooseWaiter: document.getElementById('choose-waiter'),
+  chooseFrontDesk: document.getElementById('choose-front-desk'),
+  chooseDelivery: document.getElementById('choose-delivery'),
   chooseBarista: document.getElementById('choose-barista'),
 };
 
-// role: 'waiter' | 'barista'
+const sections = {
+  preparing: els.preparingList?.closest('.card') || null,
+  delivery: els.deliveryList?.closest('.card') || null,
+  all: els.completedList?.closest('.card') || null,
+};
+
+// role: 'front-desk' | 'delivery' | 'barista'
 let role = null;
 
 function getRole() {
   const r = sessionStorage.getItem('role');
-  return r === 'waiter' || r === 'barista' ? r : null;
+  return r === 'front-desk' || r === 'delivery' || r === 'barista' ? r : null;
 }
 
 function setRole(r) {
@@ -31,16 +38,49 @@ function setRole(r) {
 }
 
 function roleName(r) {
-  return r === 'barista' ? '咖啡师' : r === 'waiter' ? '服务生' : '未设置';
+  return r === 'front-desk' ? '前台' : r === 'delivery' ? '配送' : r === 'barista' ? '咖啡师' : '未设置';
 }
 
 function applyRoleUI() {
   if (els.roleLabel) els.roleLabel.textContent = roleName(role);
   if (els.roleModal) els.roleModal.classList.add('hidden');
-  // 服务生可见添加卡片，咖啡师隐藏
-  if (els.addCard) els.addCard.style.display = role === 'waiter' ? '' : 'none';
+  // 前台可见添加卡片，其他角色隐藏
+  if (els.addCard) els.addCard.style.display = role === 'front-desk' ? '' : 'none';
+  // 更新栏的可见性
+  updateSectionVisibility();
   // 重新渲染列表以应用按钮权限
   if (window.__currentOrders) renderLists(window.__currentOrders);
+}
+
+function updateSectionVisibility() {
+  if (!sections.preparing || !sections.delivery || !sections.all) return;
+
+  sections.preparing.style.gridColumn = 'auto';
+  sections.delivery.style.gridColumn = 'auto';
+  sections.all.style.gridColumn = 'auto';
+
+  if (role === 'front-desk') {
+    sections.preparing.style.display = 'none';
+    sections.delivery.style.display = 'none';
+    sections.all.style.display = '';
+    sections.all.style.gridColumn = '1 / -1';
+    return;
+  }
+
+  if (role === 'delivery') {
+    sections.preparing.style.display = 'none';
+    sections.delivery.style.display = '';
+    sections.all.style.display = 'none';
+    sections.delivery.style.gridColumn = '1 / -1';
+    return;
+  }
+
+  if (role === 'barista') {
+    sections.preparing.style.display = '';
+    sections.delivery.style.display = 'none';
+    sections.all.style.display = 'none';
+    sections.preparing.style.gridColumn = '1 / -1';
+  }
 }
 
 function openRoleModal() {
@@ -49,7 +89,7 @@ function openRoleModal() {
 
 function fmtTime(ts) {
   const d = new Date(ts);
-  return d.toLocaleString();
+  return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 function statusLabel(status) {
@@ -61,6 +101,7 @@ function statusLabel(status) {
 function orderCard(order) {
   const div = document.createElement('div');
   div.className = 'order';
+  div.classList.add(`status-${order.status}`);
   div.dataset.id = order.id;
   const timeText = order.status === 'delivery_pending'
     ? `更新: ${fmtTime(order.updatedAt)}`
@@ -79,7 +120,7 @@ function orderCard(order) {
   // 咖啡师：制作中 -> 待配送
   if (order.status === 'preparing' && role === 'barista') {
     const btn = document.createElement('button');
-    btn.textContent = '转为待配送';
+    btn.textContent = '制作完成';
     btn.className = 'to-delivery';
     btn.onclick = async () => {
       btn.disabled = true;
@@ -99,10 +140,10 @@ function orderCard(order) {
     div.appendChild(actions);
   }
 
-  // 服务生：待配送 -> 已完成
-  if (order.status === 'delivery_pending' && role === 'waiter') {
+  // 配送：待配送 -> 已完成
+  if (order.status === 'delivery_pending' && role === 'delivery') {
     const btn = document.createElement('button');
-    btn.textContent = '标记已完成';
+    btn.textContent = '配送完成';
     btn.className = 'complete';
     btn.onclick = async () => {
       btn.disabled = true;
@@ -130,20 +171,28 @@ function renderLists(all) {
   const preparing = all.filter(o => o.status === 'preparing').sort(byCreatedDesc);
   const delivery = all.filter(o => o.status === 'delivery_pending').sort(byUpdatedDesc);
   const completed = all.filter(o => o.status === 'completed').sort(byUpdatedDesc);
+  const allOrders = [...all].sort(byUpdatedDesc);
 
   els.preparingList.innerHTML = '';
   els.deliveryList.innerHTML = '';
   els.completedList.innerHTML = '';
 
-  preparing.forEach(o => els.preparingList.appendChild(orderCard(o)));
-  delivery.forEach(o => els.deliveryList.appendChild(orderCard(o)));
-  completed.forEach(o => els.completedList.appendChild(orderCard(o)));
+  if (role === 'front-desk') {
+    allOrders.forEach(o => els.completedList.appendChild(orderCard(o)));
+  } else {
+    preparing.forEach(o => els.preparingList.appendChild(orderCard(o)));
+    delivery.forEach(o => els.deliveryList.appendChild(orderCard(o)));
+    completed.forEach(o => els.completedList.appendChild(orderCard(o)));
+  }
+  
+  // 根据角色更新栏的可见性
+  updateSectionVisibility();
 }
 
 async function addOrder(e) {
   e.preventDefault();
-  if (role !== 'waiter') {
-    if (els.formStatus) els.formStatus.textContent = '只有服务生可以添加点单';
+  if (role !== 'front-desk') {
+    if (els.formStatus) els.formStatus.textContent = '只有前台可以添加点单';
     setTimeout(() => (els.formStatus.textContent = ''), 1500);
     return;
   }
@@ -213,7 +262,8 @@ els.form.addEventListener('submit', addOrder);
 
 // 角色选择与切换
 els.roleSwitch?.addEventListener('click', () => openRoleModal());
-els.chooseWaiter?.addEventListener('click', () => setRole('waiter'));
+els.chooseFrontDesk?.addEventListener('click', () => setRole('front-desk'));
+els.chooseDelivery?.addEventListener('click', () => setRole('delivery'));
 els.chooseBarista?.addEventListener('click', () => setRole('barista'));
 
 // 初始化角色

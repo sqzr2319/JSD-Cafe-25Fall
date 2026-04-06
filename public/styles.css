@@ -217,6 +217,51 @@ button:disabled {
   background: #f5fffc;
 }
 
+.order.status-preparing {
+  border-left: 4px solid #f59e0b;
+}
+
+.order.status-delivery_pending {
+  border-left: 4px solid #0284c7;
+}
+
+.order.status-completed {
+  border-left: 4px solid #0f766e;
+  background: #f5fffc;
+}
+
+/* Front-desk "all orders" list: keep per-status colors instead of all green */
+#completed-list .order.status-preparing {
+  border-left: 4px solid #f59e0b;
+  background: #fff;
+}
+
+#completed-list .order.status-delivery_pending {
+  border-left: 4px solid #0284c7;
+  background: #fff;
+}
+
+#completed-list .order.status-completed {
+  border-left: 4px solid #0f766e;
+  background: #f5fffc;
+}
+
+/* Admin order list: status-based colors */
+#admin-list .order.status-preparing {
+  border-left: 4px solid #f59e0b;
+  background: #fff;
+}
+
+#admin-list .order.status-delivery_pending {
+  border-left: 4px solid #0284c7;
+  background: #fff;
+}
+
+#admin-list .order.status-completed {
+  border-left: 4px solid #0f766e;
+  background: #f5fffc;
+}
+
 @media (min-width: 980px) {
   main {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -240,7 +285,7 @@ button:disabled {
 
 .modal .dialog {
   width: 100%;
-  max-width: 520px;
+  max-width: 245px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -282,7 +327,7 @@ a.nav-link:hover {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .admin-actions select {
@@ -291,6 +336,15 @@ a.nav-link:hover {
   padding: 8px 10px;
   background: #fff;
   color: var(--text);
+}
+
+#admin-list .row-status {
+  min-height: 0;
+  margin-top: 4px;
+}
+
+#admin-list .row-status:empty {
+  display: none;
 }
 
 button.danger {
@@ -379,3 +433,4 @@ button.danger {
   border-radius: 12px;
   background: #fff;
 }
+

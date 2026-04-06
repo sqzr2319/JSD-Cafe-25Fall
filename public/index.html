@@ -11,7 +11,6 @@
     <h1>咖啡厅在线点单</h1>
     <div class="rolebar">
       <span>当前角色：<strong id="role-label">未设置</strong></span>
-      <a href="/lottery" class="ghost nav-link">活动抽奖</a>
       <button id="role-switch" class="ghost">切换角色</button>
     </div>
   </header>
@@ -36,7 +35,7 @@
     </section>
 
     <section class="card">
-      <h2>制作中</h2>
+        <h2>待制作</h2>
       <div id="preparing-list" class="list"></div>
     </section>
 
@@ -46,19 +45,19 @@
     </section>
 
     <section class="card">
-      <h2>已完成的点单</h2>
+        <h2>所有点单</h2>
       <div id="completed-list" class="list"></div>
     </section>
   </main>
 
-  <!-- 角色选择弹窗 -->
   <div id="role-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="role-modal-title">
     <div class="dialog">
       <h3 id="role-modal-title">请选择你的身份</h3>
       <p class="muted">选择后将限制对应权限。</p>
       <div class="role-actions">
-        <button id="choose-waiter">服务生（添加点单、完成配送）</button>
-        <button id="choose-barista" class="complete">咖啡师（制作中转待配送）</button>
+        <button id="choose-front-desk">前台</button>
+        <button id="choose-delivery" class="complete">配送</button>
+        <button id="choose-barista" class="to-delivery">咖啡师</button>
       </div>
     </div>
   </div>
