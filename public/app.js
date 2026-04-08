@@ -42,9 +42,10 @@ function roleName(r) {
 }
 
 function applyRoleUI() {
+  document.body.classList.remove('no-role');
   if (els.roleLabel) els.roleLabel.textContent = roleName(role);
   if (els.roleModal) els.roleModal.classList.add('hidden');
-  // 前台可见添加卡片，其他角色隐藏
+  // 前台仅可见添加卡片，其他角色仅可见对应列表
   if (els.addCard) els.addCard.style.display = role === 'front-desk' ? '' : 'none';
   // 更新栏的可见性
   updateSectionVisibility();
@@ -62,8 +63,7 @@ function updateSectionVisibility() {
   if (role === 'front-desk') {
     sections.preparing.style.display = 'none';
     sections.delivery.style.display = 'none';
-    sections.all.style.display = '';
-    sections.all.style.gridColumn = '1 / -1';
+    sections.all.style.display = 'none';
     return;
   }
 
@@ -178,7 +178,8 @@ function renderLists(all) {
   els.completedList.innerHTML = '';
 
   if (role === 'front-desk') {
-    allOrders.forEach(o => els.completedList.appendChild(orderCard(o)));
+    updateSectionVisibility();
+    return;
   } else {
     preparing.forEach(o => els.preparingList.appendChild(orderCard(o)));
     delivery.forEach(o => els.deliveryList.appendChild(orderCard(o)));
@@ -268,8 +269,12 @@ els.chooseBarista?.addEventListener('click', () => setRole('barista'));
 
 // 初始化角色
 role = getRole();
-if (!role) openRoleModal();
-else applyRoleUI();
+if (!role) {
+  document.body.classList.add('no-role');
+  openRoleModal();
+} else {
+  applyRoleUI();
+}
 
 // 初始加载（容错: 如果 SSE 不可用，退回到轮询）
 try {

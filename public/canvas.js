@@ -17,38 +17,34 @@ function statusLabel(status) {
   return '已完成';
 }
 
-function orderCard(order) {
-  const div = document.createElement('div');
-  div.className = 'order';
-  div.dataset.id = order.id;
-  const timeText = `创建: ${fmtTime(order.createdAt)}${order.updatedAt !== order.createdAt ? ` · 更新: ${fmtTime(order.updatedAt)}` : ''}`;
-  div.innerHTML = `
-    <div class="order-main">
-      <div class="meta">
-        <strong>#${order.id}</strong>
-        <span class="muted">${statusLabel(order.status)}</span>
-      </div>
-      <div class="items">${order.items}</div>
-      <div class="times muted">${timeText}</div>
-    </div>
-  `;
-  return div;
+function renderInlineList(container, orders) {
+  container.innerHTML = '';
+  if (!orders.length) {
+    const empty = document.createElement('div');
+    empty.className = 'lottery-inline';
+    empty.textContent = '';
+    container.appendChild(empty);
+    return;
+  }
+
+  const sorted = [...orders].sort((a, b) => String(a.id).localeCompare(String(b.id), 'zh-CN', { numeric: true }));
+  const inline = document.createElement('div');
+  inline.className = 'lottery-inline';
+  inline.textContent = sorted.map((o) => `#${o.id}`).join('  ');
+  container.appendChild(inline);
 }
 
 function renderLists(all) {
-  const byCreatedDesc = (a, b) => b.createdAt - a.createdAt;
+  const byCreatedAsc = (a, b) => a.createdAt - b.createdAt;
+  const byUpdatedAsc = (a, b) => a.updatedAt - b.updatedAt;
   const byUpdatedDesc = (a, b) => b.updatedAt - a.updatedAt;
-  const preparing = all.filter(o => o.status === 'preparing').sort(byCreatedDesc);
-  const delivery = all.filter(o => o.status === 'delivery_pending').sort(byUpdatedDesc);
+  const preparing = all.filter(o => o.status === 'preparing').sort(byCreatedAsc);
+  const delivery = all.filter(o => o.status === 'delivery_pending').sort(byUpdatedAsc);
   const completed = all.filter(o => o.status === 'completed').sort(byUpdatedDesc);
 
-  els.preparingList.innerHTML = '';
-  els.deliveryList.innerHTML = '';
-  els.completedList.innerHTML = '';
-
-  preparing.forEach(o => els.preparingList.appendChild(orderCard(o)));
-  delivery.forEach(o => els.deliveryList.appendChild(orderCard(o)));
-  completed.forEach(o => els.completedList.appendChild(orderCard(o)));
+  renderInlineList(els.preparingList, preparing);
+  renderInlineList(els.deliveryList, delivery);
+  renderInlineList(els.completedList, completed);
 }
 
 function sseConnect() {

@@ -12,6 +12,7 @@ const VALID_STATUSES = new Set(['preparing', 'delivery_pending', 'completed']);
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/resources', express.static(path.join(__dirname, 'resources')));
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/lottery', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'lottery.html')));
 app.get('/canvas', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'canvas.html')));
